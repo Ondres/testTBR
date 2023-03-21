@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tbrtesttask/api_country/api_country.dart';
-import 'package:tbrtesttask/pages/variables.dart';
+import 'loadingPage.dart';
+
+ScrollController _scrollController = new ScrollController();
+TextEditingController _text_controller = new TextEditingController();
+Color colorSearch = Colors.black87;
+String _str = '';
 
 class PopUp extends StatefulWidget {
   const PopUp({Key? key}) : super(key: key);
@@ -18,101 +23,20 @@ class _PopUpState extends State<PopUp> {
             backgroundColor: Color.fromRGBO(142, 170, 251, 1),
             body: Container(
               child: Column(children: [
-                TopPart(),
-                BottomPart(),
+                bodyPart(),
               ]),
             )));
   }
 }
 
-class BottomPart extends StatefulWidget {
-  const BottomPart({Key? key}) : super(key: key);
+class bodyPart extends StatefulWidget {
+  const bodyPart({Key? key}) : super(key: key);
 
   @override
-  State<BottomPart> createState() => _BottomPartState();
+  State<bodyPart> createState() => _bodyPartState();
 }
 
-class _BottomPartState extends State<BottomPart> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        padding: EdgeInsets.only(left: 15),
-        height: MediaQuery.of(context).size.height * 0.75 - 5,
-        width: MediaQuery.of(context).size.width,
-        child: ListView.builder(
-            controller: scrollController,
-            itemCount: country.length,
-            itemBuilder: (_, index) {
-              if (country[index]
-                      .countryName
-                      .toLowerCase()
-                      .contains(str.toLowerCase()) ||
-                  country[index].phoneCode.contains(text_controller.text) ||
-                  text_controller.text.isEmpty)
-                return TextButton(
-                    onPressed: () {
-                      setState(() {
-                        text_controller.clear();
-                        current_index = index;
-                      });
-                      Navigator.of(context).pop();
-                    },
-                    child: Container(
-                      height: 45,
-                      width: MediaQuery.of(context).size.width,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Container(
-                            margin: EdgeInsets.all(5),
-                            width: 40,
-                            height: 30,
-                            child: SvgPicture.network(
-                              country[index].imgUrl,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.all(5),
-                            width: 70,
-                            height: 45,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              country[index].phoneCode,
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.black),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            margin: EdgeInsets.all(5),
-                            height: 45,
-                            width: 140,
-                            child: Text(
-                              country[index].countryName,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ));
-              else
-                return Container();
-            }));
-  }
-}
-
-class TopPart extends StatefulWidget {
-  const TopPart({Key? key}) : super(key: key);
-
-  @override
-  State<TopPart> createState() => _TopPartState();
-}
-
-class _TopPartState extends State<TopPart> {
+class _bodyPartState extends State<bodyPart> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
@@ -149,10 +73,11 @@ class _TopPartState extends State<TopPart> {
                       primary: Colors.transparent,
                       shadowColor: Colors.transparent),
                   onPressed: () {
-                    setState(() {
-                      text_controller.clear();
-                    });
                     Navigator.of(context).pop();
+                    setState(() {
+                      _str = '';
+                      _text_controller.clear();
+                    });
                   },
                   child: Icon(
                     Icons.close,
@@ -173,7 +98,7 @@ class _TopPartState extends State<TopPart> {
         child: TextField(
           onChanged: (value) {
             setState(() {
-              str = value;
+              _str = value;
             });
           },
           onTap: () {
@@ -182,7 +107,7 @@ class _TopPartState extends State<TopPart> {
             });
           },
           autofocus: false,
-          controller: text_controller,
+          controller: _text_controller,
           style: TextStyle(fontSize: 16, color: Colors.black),
           decoration: InputDecoration(
             prefixIcon: Icon(
@@ -197,6 +122,79 @@ class _TopPartState extends State<TopPart> {
           ),
         ),
       ),
+      Container(
+          padding: EdgeInsets.only(left: 15),
+          height: MediaQuery.of(context).size.height * 0.75 - 5,
+          width: MediaQuery.of(context).size.width,
+          child: ListView.builder(
+              controller: _scrollController,
+              itemCount: country.length,
+              itemBuilder: (_, index) {
+                if (country[index]
+                        .countryName
+                        .toLowerCase()
+                        .contains(_str.toLowerCase()) ||
+                    country[index].phoneCode.contains(_str.toLowerCase()) ||
+                    _str.toLowerCase().isEmpty)
+                  return TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() {
+                          _text_controller.clear();
+                          _str = '';
+                          current_index = index;
+                        });
+                      },
+                      child: Container(
+                        height: 45,
+                        width: MediaQuery.of(context).size.width,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(16)),
+                              ),
+                              width: 40,
+                              height: 30,
+                              child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(7),
+                                  child: SvgPicture.network(
+                                    country[index].imgUrl,
+                                    fit: BoxFit.fill,
+                                  )),
+                            ),
+                            Container(
+                              margin: EdgeInsets.all(5),
+                              width: 70,
+                              height: 45,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                country[index].phoneCode,
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.black),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              margin: EdgeInsets.all(5),
+                              height: 45,
+                              width: 140,
+                              child: Text(
+                                country[index].countryName,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ));
+                else
+                  return Container();
+              })),
     ]);
   }
 }

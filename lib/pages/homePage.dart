@@ -5,7 +5,13 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:tbrtesttask/pages/popUp.dart';
 import '../api_country/api_country.dart';
-import 'variables.dart';
+import 'loadingPage.dart';
+
+late AnimationController _animationController;
+late Animation<double> _animation;
+Radius _radius = Radius.circular(0);
+TextEditingController _phone_controller = new TextEditingController();
+int lenght = 0;
 
 class homePage extends StatefulWidget {
   const homePage({Key? key}) : super(key: key);
@@ -19,26 +25,26 @@ class _homePageState extends State<homePage>
   @override
   void initState() {
     super.initState();
-    animationController = AnimationController(
+    _animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 200),
     );
-    animation =
-        Tween<double>(begin: 1.0, end: 0.95).animate(animationController);
+    _animation =
+        Tween<double>(begin: 1.0, end: 0.95).animate(_animationController);
   }
 
   @override
   void dispose() {
-    animationController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-        animation: animation,
+        animation: _animation,
         builder: (context, child) => Transform.scale(
-            scale: animation.value,
+            scale: _animation.value,
             child:
                 Scaffold(backgroundColor: Colors.transparent, body: Home())));
   }
@@ -57,7 +63,7 @@ class _HomeState extends State<Home> {
     return Container(
       decoration: BoxDecoration(
         color: Color.fromRGBO(142, 170, 251, 1),
-        borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
+        borderRadius: BorderRadius.only(topLeft: _radius, topRight: _radius),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -101,9 +107,9 @@ class _HomeState extends State<Home> {
                       onPressed: () {
                         setState(() {
                           colorSearch = Colors.black87;
-                          radius = Radius.circular(16);
+                          _radius = Radius.circular(16);
                         });
-                        animationController
+                        _animationController
                             .forward(); // запуск анимации уменьшения фонового виджета
                         showCupertinoModalBottomSheet(
                           expand: false,
@@ -111,9 +117,9 @@ class _HomeState extends State<Home> {
                           backgroundColor: Colors.transparent,
                           builder: (context) => PopUp(),
                         ).then((value) => {
-                              animationController.reverse(),
+                              _animationController.reverse(),
                               setState(() {
-                                radius = Radius.circular(0);
+                                _radius = Radius.circular(0);
                               })
                             }); // запуск анимации увеличения фонового виджета после закрытия модального окна
                       },
@@ -122,13 +128,15 @@ class _HomeState extends State<Home> {
                         children: [
                           Container(
                               width: 30,
-                              height: 22,
-                              child: SvgPicture.network(
-                                country.isNotEmpty
-                                    ? country[current_index].imgUrl
-                                    : 'https://flagcdn.com/ao.svg',
-                                fit: BoxFit.contain,
-                              )),
+                              height: 25,
+                              child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(7),
+                                  child: SvgPicture.network(
+                                    country.isNotEmpty
+                                        ? country[current_index].imgUrl
+                                        : 'https://flagcdn.com/ao.svg',
+                                    fit: BoxFit.contain,
+                                  ))),
                           Text(
                             country.isNotEmpty
                                 ? country[current_index].phoneCode
@@ -148,12 +156,20 @@ class _HomeState extends State<Home> {
                   width: 256,
                   padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
                   child: TextField(
-                    inputFormatters: [InputFormatter()],
+                    onChanged: (value) {
+                      setState(() {
+                        lenght = value.length;
+                      });
+                    },
+                    inputFormatters: [
+                      InputFormatter(),
+                      LengthLimitingTextInputFormatter(14),
+                    ],
                     keyboardType: TextInputType.phone,
                     keyboardAppearance: Brightness.dark,
                     smartDashesType: SmartDashesType.disabled,
                     autofocus: true,
-                    controller: phone_controller,
+                    controller: _phone_controller,
                     style: TextStyle(fontSize: 16, color: Colors.black),
                     decoration: InputDecoration(
                       hintText: "Your phone number",
@@ -169,7 +185,9 @@ class _HomeState extends State<Home> {
           Container(
               margin: EdgeInsets.fromLTRB(307, 0, 20, 0),
               decoration: BoxDecoration(
-                color: Color.fromRGBO(244, 245, 255, 0.4),
+                color: _phone_controller.text.length < 14
+                    ? Color.fromRGBO(244, 245, 255, 0.4)
+                    : Color.fromRGBO(244, 245, 255, 1),
                 borderRadius: BorderRadius.all(Radius.circular(16)),
               ),
               width: 48,
@@ -182,15 +200,19 @@ class _HomeState extends State<Home> {
                       padding: EdgeInsets.all(0),
                       primary: Colors.transparent,
                       shadowColor: Colors.transparent),
-                  onPressed: () async {
-
+                  onPressed: () {
+                    _phone_controller.text.length < 14
+                        ? print("Positiv vibes :)")
+                        : print("None positiv vibes :(");
                   },
                   child: Container(
                       width: 48,
                       height: 48,
                       child: Icon(
                         Icons.arrow_forward,
-                        color: Colors.black54,
+                        color: _phone_controller.text.length < 14
+                            ? Colors.black54
+                            : Colors.black,
                       )))),
         ],
       ),
@@ -206,20 +228,30 @@ class InputFormatter extends TextInputFormatter {
     final charStr = str.split('');
     var newStr = <String>[];
     for (int i = 0; i < str.length; i++) {
-      if (i == 0 && str.length == 1) {
+      if (str.length == 6 &&
+          i == 5 &&
+          oldValue.text.length < newValue.text.length) newStr.add(' ');
+
+      if (i == 0 &&
+          str.length == 1 &&
+          oldValue.text.length < newValue.text.length) {
         newStr.add('(');
       }
-
       newStr.add(charStr[i]);
-      if (i == 3 && str.length == 4) {
+
+      if (i == 3 &&
+          str.length == 5 &&
+          oldValue.text.length < newValue.text.length) {
         newStr.add(') ');
       }
-      if (i == 8 && str.length == 9) {
+
+      if (i == 8 &&
+          str.length == 10 &&
+          oldValue.text.length < newValue.text.length) {
         newStr.add('-');
       }
     }
     final resultStr = newStr.join('');
-
     return TextEditingValue(
       text: resultStr,
       selection: TextSelection.collapsed(offset: resultStr.length),

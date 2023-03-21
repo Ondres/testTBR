@@ -37,7 +37,8 @@ dependencies:
   modal_bottom_sheet:
   http:
   flutter_svg:
-
+  geolocator:
+  geocoding:
 dev_dependencies:
   flutter_test:
     sdk: flutter
