@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:tbrtesttask/pages/popUp.dart';
 import '../api_country/api_country.dart';
-import '../classes/Country.dart';
-import 'homePage.dart';
 import 'package:geocoding/geocoding.dart';
 
 bool _start = false;

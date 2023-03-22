@@ -22,9 +22,7 @@ class _PopUpState extends State<PopUp> {
         child: Scaffold(
             backgroundColor: Color.fromRGBO(142, 170, 251, 1),
             body: Container(
-              child: Column(children: [
-                bodyPart(),
-              ]),
+              child: bodyPart(),
             )));
   }
 }
